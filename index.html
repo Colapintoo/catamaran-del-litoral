@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Modelo 3D navegable del Catamarán del Litoral, proyecto de interiores de transporte (IED).">
+<style>html{color-scheme:light}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}[hidden]{display:none!important}</style>
+<title>Catamarán del Litoral</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Montserrat:wght@400;500;600&display=swap">
+<style>
+  /* Layout: visor 3D a pantalla completa, ficha técnica flotante arriba y botonera de vistas abajo */
+  :root {
+    --bg: #eef0f3; --bg2: #d9dee6; --fg: #0d1440; --muted: #4c5579;
+    --accent: #000596; --on-accent: #ffffff; --panel: rgba(255,255,255,.84); --line: rgba(0,5,150,.14);
+    --display: "Marcellus", "Times New Roman", serif;
+    --body: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #11152a; --bg2: #232a4d; --fg: #e9ecff; --muted: #a3abd6; --accent: #9aa4ff; --on-accent: #0b0f26;
+    --panel: rgba(16,20,44,.84); --line: rgba(154,164,255,.22); color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #11152a; --bg2: #232a4d; --fg: #e9ecff; --muted: #a3abd6; --accent: #9aa4ff; --on-accent: #0b0f26;
+    --panel: rgba(16,20,44,.84); --line: rgba(154,164,255,.22); color-scheme: dark }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--body); overflow: hidden; }
+  .stage { position: relative; height: 100%; background: radial-gradient(ellipse at 50% 62%, var(--bg) 0%, var(--bg2) 100%); }
+  #view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .card { position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+    max-width: min(340px, calc(100% - 32px)); background: var(--panel); backdrop-filter: blur(10px);
+    border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 10px; }
+  .eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(22px, 3vw, 30px); letter-spacing: .04em;
+    text-transform: uppercase; color: var(--accent); text-wrap: balance; }
+  .specs { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 8px 18px; margin: 0; }
+  .specs div { display: grid; gap: 2px; }
+  .specs dt { font-size: 11px; color: var(--muted); }
+  .specs dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .hint { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.45; }
+  .views { position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px)); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+    background: var(--panel); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 22px; padding: 6px;
+    width: max-content; max-width: calc(100% - 32px); }
+  .views button { font: 500 13px var(--body); color: var(--fg); background: transparent; border: 0; border-radius: 999px;
+    padding: 8px 14px; cursor: pointer; }
+  .views button:hover { background: var(--line); }
+  .views button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+  .views button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .status { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 13px; pointer-events: none; }
+  /* apartado inferior: vistas + plantas */
+  .dock { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    display: grid; justify-items: center; gap: 8px; width: max-content; max-width: calc(100% - 32px); }
+  .dock .views { position: static; transform: none; max-width: 100%; }
+  .row-label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600;
+    align-self: center; padding: 0 6px 0 10px; }
+  .legend { position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+    width: min(280px, calc(100% - 32px)); background: var(--panel); backdrop-filter: blur(10px);
+    border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; }
+  .legend h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 18px; letter-spacing: .04em; color: var(--accent); }
+  .legend p { margin: 0; font-size: 12px; color: var(--muted); }
+  .legend ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+  @media (max-width: 760px) { .legend { top: auto; bottom: calc(120px + env(safe-area-inset-bottom, 0px)); } .card { max-width: calc(100% - 32px); } }
+  @media (max-width: 560px) { .hint { display: none; } .views button { padding: 7px 11px; font-size: 12px; } .legend ol { display: none; } }
+</style>
+</head>
+<body>
+
+
+<div class="stage">
+  <canvas id="view" aria-label="Modelo 3D del catamarán: arrastra para girarlo"></canvas>
+  <div class="status" id="status">Cargando modelo…</div>
+
+  <section class="card" aria-label="Ficha del barco">
+    <span class="eyebrow">Ruta Gastronómica del Litoral · exterior</span>
+    <h1>Catamarán del Litoral</h1>
+    <dl class="specs">
+      <div><dt>Eslora</dt><dd>30 m</dd></div>
+      <div><dt>Manga</dt><dd>9,5 m</dd></div>
+      <div><dt>Cubiertas</dt><dd>2 × 2,40 m</dd></div>
+    </dl>
+    <p class="hint">Arrastra para girar, rueda o pellizco para acercar y clic derecho para desplazar.</p>
+  </section>
+
+  <section class="legend" id="legend" aria-live="polite" hidden>
+    <h2 id="lg-title">Cubierta 1</h2>
+    <p id="lg-sub"></p>
+    <ol id="lg-list"></ol>
+  </section>
+
+  <div class="dock">
+    <nav class="views" aria-label="Plantas">
+      <span class="row-label">Plantas</span>
+      <button type="button" id="p-all" data-deck="all" aria-pressed="true">Completo</button>
+      <button type="button" id="p-2" data-deck="d2" aria-pressed="false">Cubierta 2</button>
+      <button type="button" id="p-1" data-deck="d1" aria-pressed="false">Cubierta 1</button>
+    </nav>
+    <nav class="views" aria-label="Vistas">
+      <button type="button" id="v-front" data-view="front" aria-pressed="true">Proa 3/4</button>
+      <button type="button" id="v-side" data-view="side" aria-pressed="false">Lateral</button>
+      <button type="button" id="v-rear" data-view="rear" aria-pressed="false">Popa 3/4</button>
+      <button type="button" id="v-top" data-view="top" aria-pressed="false">Planta</button>
+      <button type="button" id="v-spin" aria-pressed="false">Girar</button>
+    </nav>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="barco-data.js"></script>
+<script>
+(() => {
+  const canvas = document.getElementById('view');
+  const status = document.getElementById('status');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.78;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 500);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
+  controls.maxPolarAngle = Math.PI * 0.53; controls.minDistance = 8; controls.maxDistance = 120;
+  controls.autoRotateSpeed = 0.8;
+
+  // luz principal lateral alta + contraluz suave: marca las caras y las aristas del casco
+  const sun = new THREE.DirectionalLight(0xfff1df, 2.3);
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005;
+  scene.add(sun, sun.target);
+  const rim = new THREE.DirectionalLight(0xdfe7ff, 0.45); scene.add(rim, rim.target);
+  scene.add(new THREE.HemisphereLight(0xe8eeff, 0x3d424d, 0.22));
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.ShadowMaterial({ opacity: 0.18 }));
+  ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+  let center = new THREE.Vector3(15, 3, 0), radius = 20;
+  const views = {
+    front: { az: 40, el: 14 }, side: { az: 0, el: 3 }, rear: { az: -130, el: 18 }, top: { az: 0, el: 88 }
+  };
+  // Acimut medido desde el costado de estribor (+z); 90° mira desde proa (+x)
+  function viewPos(name) {
+    const v = views[name], d = radius * 2.15;
+    const az = THREE.MathUtils.degToRad(90 - v.az), el = THREE.MathUtils.degToRad(v.el);
+    return new THREE.Vector3(
+      center.x + d * Math.cos(el) * Math.cos(az),
+      center.y + d * Math.sin(el),
+      center.z + d * Math.cos(el) * Math.sin(az));
+  }
+  let tween = null;
+  function goTo(name, instant) {
+    const to = viewPos(name);
+    if (instant || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      camera.position.copy(to); controls.target.copy(center); controls.update(); return;
+    }
+    tween = { from: camera.position.clone(), fromT: controls.target.clone(), to, t: 0 };
+  }
+
+  const bytes = Uint8Array.from(atob(window.BARCO_GLB || ''), c => c.charCodeAt(0));
+  new THREE.GLTFLoader().parse(bytes.buffer, '', gltf => {
+    const model = gltf.scene;
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x1a2140, transparent: true, opacity: 0.22 });
+    const edges = [];
+    model.traverse(o => {
+      if (o.isMesh) {
+        o.castShadow = true; o.receiveShadow = true;
+        const m = o.material;
+        if (m) { m.envMapIntensity = 0.4; m.side = THREE.DoubleSide; }
+        if (m && m.color && m.color.r > 0.8 && m.color.g > 0.8) {
+          // blanco roto satinado: deja leer la forma en vez de quemarse
+          m.color.setRGB(0.74, 0.75, 0.77); m.roughness = 0.42; m.metalness = 0;
+        }
+        // líneas de arista suaves en las piezas grandes (casco, cúpula, techo, plataforma)
+        o.geometry.computeBoundingBox();
+        const s = o.geometry.boundingBox.getSize(new THREE.Vector3());
+        if (Math.max(s.x, s.y, s.z) > 3) edges.push(o);
+      }
+    });
+    edges.forEach(o => {
+      const l = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 28), edgeMat);
+      o.add(l);
+    });
+    scene.add(model);
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    center = box.getCenter(new THREE.Vector3()); center.y = size.y * 0.32;
+    radius = Math.max(size.x, size.z) * 0.5;
+    ground.position.set(center.x, box.min.y + 0.01, center.z);
+    sun.position.set(center.x + 30, 28, center.z + 22); sun.target.position.copy(center);
+    rim.position.set(center.x - 30, 15, center.z - 25); rim.target.position.copy(center);
+    const s = sun.shadow.camera; s.left = -30; s.right = 30; s.top = 30; s.bottom = -30; s.far = 150; s.updateProjectionMatrix();
+    goTo('front', true);
+    status.hidden = true;
+  }, err => { status.textContent = 'No se pudo cargar el modelo.'; console.error(err); });
+
+  // ---- plantas: corte horizontal del modelo (alturas en metros sobre la flotación) ----
+  const decks = {
+    all: null,
+    d2: { cut: 4.4, view: 'deck', title: 'Cubierta 2', sub: 'Comedor y terrazas · suelo a 3,0 m',
+          items: ['Terraza de popa con 3 mesas redondas', 'Barandilla de vidrio negro', '4 reservados curvos', 'Mesa ovalada y sofás laterales', 'Barra semicircular', 'Terraza de proa con 6 asientos'] },
+    d1: { cut: 2.75, view: 'deck', title: 'Cubierta 1', sub: 'Dentro del casco · suelo a la flotación',
+          items: ['Bañera de popa con 4 tumbonas', 'Puesto de mando y barra semicircular', 'Aseos en cada casco: inodoros, lavabo y ducha', 'Mesa central para 6', 'Salón de proa con butacas y lámparas'] }
+  };
+  views.deck = { az: 35, el: 52 };
+  const cutPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
+  const legend = document.getElementById('legend');
+  const dbtns = [...document.querySelectorAll('button[data-deck]')];
+  dbtns.forEach(b => b.addEventListener('click', () => {
+    const d = decks[b.dataset.deck];
+    dbtns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    if (!d) { renderer.clippingPlanes = []; legend.hidden = true; return; }
+    cutPlane.constant = d.cut; renderer.clippingPlanes = [cutPlane];
+    document.getElementById('lg-title').textContent = d.title;
+    document.getElementById('lg-sub').textContent = d.sub;
+    document.getElementById('lg-list').innerHTML = d.items.map(t => '<li>' + t + '</li>').join('');
+    legend.hidden = false;
+    goTo(d.view);
+    document.querySelectorAll('button[data-view]').forEach(x => x.setAttribute('aria-pressed', 'false'));
+  }));
+
+  const btns = [...document.querySelectorAll('.views button[data-view]')];
+  btns.forEach(b => b.addEventListener('click', () => {
+    goTo(b.dataset.view);
+    btns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+  const spin = document.getElementById('v-spin');
+  spin.addEventListener('click', () => {
+    controls.autoRotate = !controls.autoRotate;
+    spin.setAttribute('aria-pressed', String(controls.autoRotate));
+  });
+  controls.addEventListener('start', () => { tween = null; });
+
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== Math.floor(w * renderer.getPixelRatio()) || canvas.height !== Math.floor(h * renderer.getPixelRatio())) {
+      renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+  }
+  function frame() {
+    resize();
+    if (tween) {
+      tween.t = Math.min(1, tween.t + 0.035);
+      const k = 1 - Math.pow(1 - tween.t, 3);
+      camera.position.lerpVectors(tween.from, tween.to, k);
+      controls.target.lerpVectors(tween.fromT, center, k);
+      if (tween.t >= 1) tween = null;
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+
+</body>
+</html>

@@ -148,7 +148,7 @@
   };
   // Acimut medido desde el costado de estribor (+z); 90° mira desde proa (+x)
   function viewPos(name) {
-    const v = views[name], d = radius * 2.15;
+    const v = views[name], d = radius * 2.3 * Math.max(1, 1.7 / Math.max(camera.aspect, 0.3));
     const az = THREE.MathUtils.degToRad(90 - v.az), el = THREE.MathUtils.degToRad(v.el);
     return new THREE.Vector3(
       center.x + d * Math.cos(el) * Math.cos(az),

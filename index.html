@@ -204,10 +204,10 @@
   // ---- plantas: corte horizontal del modelo (alturas en metros sobre la flotación) ----
   const decks = {
     all: null,
-    d2: { cut: 4.4, view: 'deck', title: 'Cubierta 2', sub: 'Comedor y terrazas · suelo a 3,0 m',
-          items: ['Terraza de popa con 3 mesas redondas', 'Barandilla de vidrio negro', '4 reservados curvos', 'Mesa ovalada y sofás laterales', 'Barra semicircular', 'Terraza de proa con 6 asientos'] },
-    d1: { cut: 2.75, view: 'deck', title: 'Cubierta 1', sub: 'Dentro del casco · suelo a la flotación',
-          items: ['Bañera de popa con 4 tumbonas', 'Puesto de mando y barra semicircular', 'Aseos en cada casco: inodoros, lavabo y ducha', 'Mesa central para 6', 'Salón de proa con butacas y lámparas'] }
+    d2: { cut: 5.2, view: 'deck', title: 'Cubierta 2', sub: 'Comedor y terrazas · suelo a 3,58 m',
+          items: ['Terraza de popa de madera con 3 mesas redondas', 'Barandilla de vidrio negro', 'Sofás serpenteantes con 4 mesas', 'Escalera en U a la cubierta 1', 'Cocina con encimeras e isla', 'Terraza de proa con 6 asientos'] },
+    d1: { cut: 3.1, view: 'deck', title: 'Cubierta 1', sub: 'Dentro del casco · suelo a 0,78 m',
+          items: ['Bañera de popa de madera con 4 tumbonas', 'Armarios de madera a suelo-techo', 'Recepción con barra semicircular', 'Escalera en U a la cubierta 2', 'Aseos en cada casco: inodoros, lavabo y ducha', 'Salón con butacas', 'Puesto de mando a proa'] }
   };
   views.deck = { az: 35, el: 52 };
   const cutPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
